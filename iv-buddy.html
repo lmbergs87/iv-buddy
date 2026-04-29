@@ -1,0 +1,1517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>IV Buddy — Clinical IV Reference</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%230d7a7a'/><text x='16' y='22' font-size='14' text-anchor='middle' fill='white' font-family='Arial' font-weight='bold'>IV</text></svg>">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --teal:        #0d7a7a;
+      --teal-light:  #e6f4f4;
+      --teal-mid:    #b2dede;
+      --teal-dark:   #095c5c;
+      --blue:        #1a5fa8;
+      --blue-light:  #e8f0fb;
+      --gray-100:    #f5f7f9;
+      --gray-200:    #e8ecf0;
+      --gray-400:    #9aa5b4;
+      --gray-600:    #4a5568;
+      --gray-900:    #1a202c;
+      --warn-bg:     #fff8e1;
+      --warn-border: #f59e0b;
+      --danger-bg:   #fef2f2;
+      --danger-border:#ef4444;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--gray-100);
+      color: var(--gray-900);
+      min-height: 100vh;
+    }
+
+    /* ── Header ── */
+    header {
+      background: var(--teal);
+      color: white;
+      padding: 0 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      height: 56px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+    .logo { font-size: 1.25rem; font-weight: 700; letter-spacing: -0.3px; display: flex; align-items: center; gap: 6px; cursor: pointer; user-select: none; }
+    .logo:hover { opacity: 0.85; }
+    .logo-dot { width: 8px; height: 8px; background: rgba(255,255,255,0.5); border-radius: 50%; }
+    .proto-badge {
+      font-size: 0.6rem;
+      background: rgba(255,255,255,0.2);
+      border: 1px solid rgba(255,255,255,0.3);
+      border-radius: 4px;
+      padding: 2px 6px;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      font-weight: 600;
+    }
+    .header-actions { margin-left: auto; display: flex; align-items: center; gap: 0.5rem; }
+    .header-btn {
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.25);
+      color: white;
+      border-radius: 6px;
+      padding: 5px 12px;
+      font-size: 0.78rem;
+      cursor: pointer;
+      transition: background 0.15s;
+      white-space: nowrap;
+    }
+    .header-btn:hover { background: rgba(255,255,255,0.25); }
+
+    /* ── Hero ── */
+    .hero {
+      background: linear-gradient(135deg, var(--teal-dark) 0%, var(--teal) 100%);
+      padding: 2rem 1.5rem 2.5rem;
+      text-align: center;
+      color: white;
+    }
+    .hero h1 { font-size: 1.5rem; font-weight: 700; margin-bottom: 0.3rem; }
+    .hero p { opacity: 0.85; font-size: 0.9rem; margin-bottom: 1.25rem; }
+    .search-wrap {
+      position: relative;
+      max-width: 520px;
+      margin: 0 auto;
+    }
+    .search-wrap svg {
+      position: absolute; left: 0.9rem; top: 50%;
+      transform: translateY(-50%);
+      color: var(--gray-400); pointer-events: none;
+    }
+    #search {
+      width: 100%;
+      padding: 0.8rem 1rem 0.8rem 2.7rem;
+      border: 2px solid transparent;
+      border-radius: 10px;
+      font-size: 1rem;
+      outline: none;
+      transition: border-color 0.2s;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+    }
+    #search:focus { border-color: var(--teal-mid); }
+    .drug-count { margin-top: 0.6rem; font-size: 0.75rem; opacity: 0.6; }
+
+    /* ── Autocomplete ── */
+    #autocomplete {
+      position: absolute; top: calc(100% + 4px); left: 0; right: 0;
+      background: white; border-radius: 8px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+      overflow: hidden; z-index: 100; display: none;
+    }
+    .ac-item {
+      padding: 0.6rem 1rem; cursor: pointer; font-size: 0.9rem;
+      display: flex; align-items: center; gap: 0.5rem;
+      border-bottom: 1px solid var(--gray-200);
+      transition: background 0.1s; text-align: left;
+    }
+    .ac-item:last-child { border-bottom: none; }
+    .ac-item:hover, .ac-item.focused { background: var(--teal-light); }
+    .ac-cat { font-size: 0.7rem; color: var(--gray-400); margin-left: auto; white-space: nowrap; }
+
+    /* ── Main ── */
+    main { max-width: 880px; margin: 1.5rem auto; padding: 0 1rem; }
+
+    /* ── Empty state ── */
+    #empty-state {
+      text-align: center; padding: 3.5rem 1rem; color: var(--gray-400);
+    }
+    #empty-state svg { margin-bottom: 1rem; opacity: 0.35; }
+    #empty-state p { font-size: 0.9rem; line-height: 1.6; }
+    #empty-state .drug-grid {
+      display: flex; flex-wrap: wrap; gap: 0.4rem;
+      justify-content: center; margin-top: 1.2rem; max-width: 500px; margin-left: auto; margin-right: auto;
+    }
+    .drug-chip {
+      background: white; border: 1px solid var(--gray-200);
+      border-radius: 20px; padding: 4px 12px; font-size: 0.78rem;
+      color: var(--teal); cursor: pointer; transition: all 0.15s;
+    }
+    .drug-chip:hover { background: var(--teal-light); border-color: var(--teal-mid); }
+
+    /* ── Drug card ── */
+    #drug-card { display: none; }
+
+    .drug-header {
+      background: white; border-radius: 12px;
+      padding: 1.2rem 1.4rem; margin-bottom: 0.9rem;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+    }
+    .drug-header-top { display: flex; align-items: flex-start; gap: 0.9rem; }
+    .drug-icon {
+      width: 44px; height: 44px; background: var(--teal-light);
+      border-radius: 10px; display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .drug-icon svg { color: var(--teal); }
+    .drug-name { font-size: 1.35rem; font-weight: 700; line-height: 1.1; }
+    .drug-generic { font-size: 0.82rem; color: var(--gray-400); margin-top: 2px; }
+    .drug-class {
+      margin-left: auto; font-size: 0.72rem;
+      background: var(--blue-light); color: var(--blue);
+      padding: 3px 10px; border-radius: 20px;
+      font-weight: 500; white-space: nowrap;
+    }
+    .alert-badges { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.75rem; }
+    .alert-badge {
+      font-size: 0.67rem;
+      font-weight: 800;
+      padding: 4px 9px 4px 7px;
+      border-radius: 5px;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: white;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.18), inset 0 1px 0 rgba(255,255,255,0.15);
+      border: none;
+      position: relative;
+    }
+    /* Left accent stripe — mimics the colored edge on real aux labels */
+    .alert-badge::before {
+      content: '';
+      display: block;
+      width: 3px;
+      height: 100%;
+      position: absolute;
+      left: 0; top: 0;
+      border-radius: 5px 0 0 5px;
+      background: rgba(0,0,0,0.2);
+    }
+    .badge-icon { font-size: 0.8rem; line-height: 1; }
+
+    .badge-highalert { background: linear-gradient(135deg, #dc2626, #b91c1c); }
+    .badge-light     { background: linear-gradient(135deg, #d97706, #b45309); }
+    .badge-refrig    { background: linear-gradient(135deg, #2563eb, #1d4ed8); }
+    .badge-vesicant  { background: linear-gradient(135deg, #c2410c, #9a3412); }
+    .badge-d5only    { background: linear-gradient(135deg, #15803d, #166534); }
+    .badge-donotfreeze { background: linear-gradient(135deg, #0891b2, #0e7490); }
+    .badge-filter    { background: linear-gradient(135deg, #7c3aed, #6d28d9); }
+
+    /* ── Sections grid ── */
+    .sections-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.9rem;
+    }
+    .section-card {
+      background: white; border-radius: 12px;
+      overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+    }
+    .section-card.full-width { grid-column: 1 / -1; }
+    .section-title {
+      display: flex; align-items: center; gap: 0.4rem;
+      padding: 0.75rem 1.1rem;
+      font-size: 0.75rem; font-weight: 700;
+      letter-spacing: 0.5px; text-transform: uppercase;
+      border-bottom: 1px solid var(--gray-200);
+      color: var(--gray-600);
+    }
+    .section-title svg { color: var(--teal); flex-shrink: 0; }
+    .section-body { padding: 0.9rem 1.1rem; }
+
+    /* ── Diluent table ── */
+    .diluent-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+    .diluent-table th {
+      text-align: left; font-weight: 600; color: var(--gray-600);
+      font-size: 0.72rem; padding-bottom: 0.4rem;
+      border-bottom: 2px solid var(--gray-200);
+    }
+    .diluent-table td { padding: 0.35rem 0.25rem 0.35rem 0; border-bottom: 1px solid var(--gray-200); vertical-align: top; }
+    .diluent-table tr:last-child td { border-bottom: none; }
+    .diluent-pill {
+      display: inline-block; background: var(--teal-light); color: var(--teal-dark);
+      border-radius: 4px; padding: 1px 6px; font-size: 0.76rem;
+      font-weight: 600; margin: 1px 2px 1px 0;
+    }
+    .bag-pill {
+      display: inline-block; background: var(--blue-light); color: var(--blue);
+      border-radius: 4px; padding: 1px 6px; font-size: 0.76rem;
+      font-weight: 600; margin: 1px 2px 1px 0;
+    }
+
+    /* ── Concentration ── */
+    .conc-row { display: flex; justify-content: space-between; margin-bottom: 0.35rem; font-size: 0.85rem; gap: 0.5rem; }
+    .conc-label { color: var(--gray-600); flex-shrink: 0; }
+    .conc-value { font-weight: 600; text-align: right; }
+    .conc-note { font-size: 0.8rem; color: var(--gray-600); line-height: 1.5; margin-top: 0.5rem; }
+
+    /* ── Stability ── */
+    .stability-table { width: 100%; border-collapse: collapse; font-size: 0.84rem; }
+    .stability-table th {
+      text-align: left; font-size: 0.72rem; font-weight: 600;
+      color: var(--gray-600); padding-bottom: 0.4rem;
+      border-bottom: 2px solid var(--gray-200);
+    }
+    .stability-table td { padding: 0.35rem 0.25rem; border-bottom: 1px solid var(--gray-200); }
+    .stability-table tr:last-child td { border-bottom: none; }
+
+    /* ── Pearls ── */
+    .pearl {
+      display: flex; gap: 0.5rem; align-items: flex-start;
+      padding: 0.4rem 0; font-size: 0.84rem;
+      border-bottom: 1px solid var(--gray-200); line-height: 1.4;
+    }
+    .pearl:last-child { border-bottom: none; padding-bottom: 0; }
+    .pearl-icon { font-size: 0.95rem; flex-shrink: 0; margin-top: 1px; }
+
+    /* ── Clinical note ── */
+    .notes-box {
+      background: var(--warn-bg); border-left: 3px solid var(--warn-border);
+      border-radius: 0 6px 6px 0; padding: 0.65rem 0.9rem;
+      font-size: 0.8rem; line-height: 1.5; color: #78350f;
+      margin: 0 1.1rem 1rem;
+    }
+
+    /* ── Suggest correction bar ── */
+    .correction-bar {
+      display: flex; align-items: center; justify-content: center;
+      gap: 0.5rem; margin-top: 0.9rem; margin-bottom: 0.5rem;
+      font-size: 0.8rem; color: var(--gray-400);
+    }
+    .correction-link {
+      color: var(--teal); text-decoration: none; font-weight: 500;
+      border-bottom: 1px dashed var(--teal-mid);
+    }
+    .correction-link:hover { color: var(--teal-dark); }
+
+    /* ── Footer ── */
+    footer {
+      text-align: center; font-size: 0.72rem; color: var(--gray-400);
+      padding: 1.5rem 1rem 3rem; line-height: 1.6;
+      max-width: 680px; margin: 0 auto;
+    }
+    footer strong { color: var(--gray-600); }
+
+    /* ── About Modal ── */
+    .modal-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.5); z-index: 200;
+      align-items: center; justify-content: center;
+      padding: 1rem;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal-box {
+      background: white; border-radius: 16px;
+      max-width: 540px; width: 100%; padding: 2rem;
+      position: relative; max-height: 88vh; overflow-y: auto;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+    }
+    .modal-close {
+      position: absolute; top: 1rem; right: 1rem;
+      background: var(--gray-100); border: none;
+      width: 30px; height: 30px; border-radius: 50%;
+      font-size: 1.1rem; cursor: pointer; color: var(--gray-600);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .modal-close:hover { background: var(--gray-200); }
+    .modal-logo { font-size: 1.4rem; font-weight: 700; color: var(--teal); margin-bottom: 0.2rem; }
+    .modal-subtitle { font-size: 0.82rem; color: var(--gray-400); margin-bottom: 1.2rem; }
+    .modal-section { margin-bottom: 1.1rem; }
+    .modal-section h3 { font-size: 0.85rem; font-weight: 700; color: var(--gray-900); margin-bottom: 0.3rem; }
+    .modal-section p { font-size: 0.84rem; color: var(--gray-600); line-height: 1.6; }
+    .modal-warning {
+      background: var(--warn-bg); border-left: 3px solid var(--warn-border);
+      border-radius: 0 6px 6px 0; padding: 0.7rem 0.9rem;
+      font-size: 0.8rem; color: #78350f; line-height: 1.5; margin-bottom: 1.1rem;
+    }
+    .modal-divider { border: none; border-top: 1px solid var(--gray-200); margin: 1rem 0; }
+    .modal-footer-links { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
+    .modal-footer-links a { font-size: 0.8rem; color: var(--teal); text-decoration: none; }
+    .modal-footer-links a:hover { text-decoration: underline; }
+
+    /* ── Mobile ── */
+    @media (max-width: 580px) {
+      header { padding: 0 1rem; }
+      .header-btn span { display: none; }
+      .hero h1 { font-size: 1.25rem; }
+      .hero p { font-size: 0.85rem; }
+      .sections-grid { grid-template-columns: 1fr; }
+      .section-card.full-width { grid-column: 1; }
+      .drug-header-top { flex-wrap: wrap; }
+      .drug-class { margin-left: 0; margin-top: 0.4rem; }
+      .diluent-table { font-size: 0.8rem; }
+      .diluent-table th:last-child,
+      .diluent-table td:last-child { display: none; }
+      .modal-box { padding: 1.4rem; }
+    }
+    @media (max-width: 400px) {
+      #search { font-size: 0.9rem; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── Header ─────────────────────────────────────────────────────────────── -->
+<header>
+  <div class="logo" onclick="goHome()" title="Back to home">
+    IV Buddy
+    <div class="logo-dot"></div>
+  </div>
+  <div class="proto-badge">Beta</div>
+  <div class="header-actions">
+    <button class="header-btn" onclick="openAbout()">
+      <span>About &amp; Disclaimer</span><span class="mobile-only"> ⓘ</span>
+    </button>
+    <a class="header-btn" href="mailto:lmbergs@gmail.com?subject=IV%20Buddy%20Feedback&body=Drug%20name%3A%0AField%20with%20issue%3A%0ACorrection%20or%20comment%3A" style="text-decoration:none;">
+      ✏️ <span>Suggest a Fix</span>
+    </a>
+  </div>
+</header>
+
+<!-- ── Hero / Search ──────────────────────────────────────────────────────── -->
+<div class="hero">
+  <h1>Your IV Buddy</h1>
+  <p>Search a drug to see diluents, bag sizes, stability, and storage — all on one screen.</p>
+  <div class="search-wrap">
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+    <input id="search" type="text" placeholder="Search drug name or brand (e.g. vancomycin, Zosyn)" autocomplete="off" />
+    <div id="autocomplete"></div>
+  </div>
+  <div class="drug-count" id="drug-count"></div>
+</div>
+
+<!-- ── Main ──────────────────────────────────────────────────────────────── -->
+<main>
+
+  <!-- Empty state -->
+  <div id="empty-state">
+    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18m0 0h10a2 2 0 0 0 2-2V9M9 21H5a2 2 0 0 1-2-2V9m0 0h18"/></svg>
+    <p>Search above, or try one of these:</p>
+    <div class="drug-grid" id="quick-chips"></div>
+  </div>
+
+  <!-- Drug card -->
+  <div id="drug-card">
+    <div class="drug-header">
+      <div class="drug-header-top">
+        <div class="drug-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M10 2h4"/><path d="M7 19c-1.7 0-3-1.3-3-3V8c0-1.7 1.3-3 3-3h10c1.7 0 3 1.3 3 3v8c0 1.7-1.3 3-3 3H7z"/><path d="M12 10v4M10 12h4"/></svg>
+        </div>
+        <div style="flex:1; min-width:0;">
+          <div class="drug-name" id="card-name"></div>
+          <div class="drug-generic" id="card-generic"></div>
+        </div>
+        <div class="drug-class" id="card-class"></div>
+      </div>
+      <div class="alert-badges" id="card-badges"></div>
+    </div>
+
+    <div class="sections-grid">
+
+      <div class="section-card full-width">
+        <div class="section-title">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18m0 0h10a2 2 0 0 0 2-2V9M9 21H5a2 2 0 0 1-2-2V9m0 0h18"/></svg>
+          Compatible Diluents &amp; Bag Sizes
+        </div>
+        <div class="section-body">
+          <table class="diluent-table">
+            <thead><tr><th style="width:32%">Diluent</th><th style="width:35%">Common Bag Sizes</th><th>Notes</th></tr></thead>
+            <tbody id="diluent-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="section-card">
+        <div class="section-title">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
+          Concentration Range
+        </div>
+        <div class="section-body" id="conc-body"></div>
+      </div>
+
+      <div class="section-card">
+        <div class="section-title">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          Stability &amp; BUD
+        </div>
+        <div class="section-body">
+          <table class="stability-table">
+            <thead><tr><th>Condition</th><th>Temp</th><th>Duration</th></tr></thead>
+            <tbody id="stability-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="section-card full-width">
+        <div class="section-title">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/></svg>
+          Storage &amp; Handling Pearls
+        </div>
+        <div class="section-body" id="pearls-body"></div>
+        <div id="notes-box"></div>
+      </div>
+
+    </div>
+
+    <div class="correction-bar">
+      <span>Something look off?</span>
+      <a class="correction-link" id="correction-link" href="#">Suggest a correction</a>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <strong>⚠ Prototype / Beta:</strong> IV Buddy is currently in early development and has not undergone formal clinical validation. Data is provided for reference and educational purposes only — it does not substitute for clinical judgment, institutional policy, current manufacturer prescribing information, or USP &lt;797&gt; guidelines. Always verify compatibility, stability, and BUD with your pharmacy's approved references before preparation. <strong>Not for use as a sole clinical decision-making tool.</strong>
+  <br><br>
+  <a href="mailto:lmbergs@gmail.com?subject=IV%20Buddy%20Feedback" style="color:var(--teal);text-decoration:none;">Feedback &amp; corrections welcome →</a>
+  &nbsp;•&nbsp; ivbuddy.app
+</footer>
+
+<!-- ── About Modal ─────────────────────────────────────────────────────────── -->
+<div class="modal-overlay" id="about-modal" onclick="if(event.target===this)closeAbout()">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeAbout()">×</button>
+    <div class="modal-logo">IV Buddy</div>
+    <div class="modal-subtitle">ivbuddy.app &nbsp;•&nbsp; Beta / Prototype</div>
+
+    <div class="modal-warning">
+      <strong>⚠ Beta disclaimer:</strong> IV Buddy is in early development and has not been formally validated. It is a reference tool only — always verify with your institution's approved references, manufacturer labeling, and current USP &lt;797&gt; guidelines before preparing or administering any IV medication.
+    </div>
+
+    <div class="modal-section">
+      <h3>What is IV Buddy?</h3>
+      <p>IV Buddy is a fast, single-purpose reference for IV medication preparation — designed for nurses, pharmacy technicians, and pharmacists who need a quick answer at the Pyxis, the IV room bench, or the bedside. One search, one screen, get back to the patient.</p>
+    </div>
+
+    <div class="modal-section">
+      <h3>What IV Buddy is NOT</h3>
+      <p>IV Buddy is not a substitute for Lexicomp, Micromedex, Trissel's, King Guide, or your institution's formulary. It does not replace pharmacist verification. It does not account for patient-specific factors, drug interactions, or institutional protocols.</p>
+    </div>
+
+    <div class="modal-section">
+      <h3>Data sources</h3>
+      <p>Entries are compiled from manufacturer prescribing information, published stability literature, and standard pharmacy references. Individual citations per field are planned for a future version.</p>
+    </div>
+
+    <div class="modal-section">
+      <h3>Coverage</h3>
+      <p>Current version covers adult IV preparations only. Pediatric concentrations and institutional protocol customization are planned for future tiers.</p>
+    </div>
+
+    <div class="modal-section">
+      <h3>Found an error?</h3>
+      <p>Clinical accuracy is our top priority. If something looks wrong, please use the <strong>"Suggest a Fix"</strong> button — every report is reviewed.</p>
+    </div>
+
+    <hr class="modal-divider">
+    <div class="modal-footer-links">
+      <a href="mailto:lmbergs@gmail.com?subject=IV%20Buddy%20Feedback&body=Drug%20name%3A%0AField%20with%20issue%3A%0ACorrection%20or%20comment%3A">✏️ Suggest a correction</a>
+      <a href="mailto:lmbergs@gmail.com?subject=IV%20Buddy%20General%20Feedback">💬 General feedback</a>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── Drug Database ─────────────────────────────────────────────────────────────
+const drugs = [
+  // ── ANTIBIOTICS ────────────────────────────────────────────────────────────
+  {
+    name: "Vancomycin",
+    generic: "Vancomycin HCl",
+    class: "Glycopeptide Antibiotic",
+    aliases: ["vanc"],
+    alerts: [],
+    diluents: [
+      { sol: "NS (0.9% NaCl)",  bags: ["100 mL","250 mL","500 mL"], note: "Preferred" },
+      { sol: "D5W",              bags: ["100 mL","250 mL","500 mL"], note: "Acceptable" },
+      { sol: "LR",               bags: ["250 mL"],                   note: "Limited data; use with caution" },
+    ],
+    concentration: { min: "2.5 mg/mL", max: "5 mg/mL (peripheral); up to 10 mg/mL (central only)", note: "Infuse over ≥60 min; ≥90 min for doses ≥1 g to reduce Red Man Syndrome risk." },
+    stability: [
+      { condition: "Reconstituted vial",   temp: "2–8 °C ❄️",   duration: "14 days" },
+      { condition: "Diluted in NS or D5W", temp: "Room temp 🌡️", duration: "96 hours" },
+      { condition: "Diluted in NS or D5W", temp: "2–8 °C ❄️",   duration: "14 days" },
+    ],
+    pearls: [
+      { icon: "🌡️", text: "Store unreconstituted vials at room temperature (20–25 °C). No light protection required." },
+      { icon: "⚠️", text: "Red Man Syndrome (flushing, pruritus) is rate-related — not a true allergy. Slow the infusion rate." },
+      { icon: "🔬", text: "AUC-guided dosing preferred (target AUC/MIC 400–600 mg·h/L for serious MRSA)." },
+    ],
+    note: "ISMP High-Alert in select care settings. Renal dose adjustment required."
+  },
+  {
+    name: "Piperacillin-Tazobactam",
+    generic: "Piperacillin/Tazobactam (Zosyn®)",
+    class: "Beta-lactam / BLI",
+    aliases: ["pip-tazo","pip tazo","zosyn","pip/tazo"],
+    alerts: [],
+    diluents: [
+      { sol: "NS (0.9% NaCl)",  bags: ["50 mL","100 mL","150 mL"], note: "Preferred; better stability" },
+      { sol: "D5W",              bags: ["50 mL","100 mL"],           note: "Compatible; shorter stability for extended infusion" },
+    ],
+    concentration: { min: "Std: 3.375 g/50 mL or 4.5 g/100 mL", max: "≤200 mg piperacillin/mL for peripheral", note: "Extended infusion (4 hr) used for resistant organisms (MIC 16–64 mg/L) — use NS only." },
+    stability: [
+      { condition: "Reconstituted vial", temp: "Room temp 🌡️", duration: "12 hours" },
+      { condition: "Reconstituted vial", temp: "2–8 °C ❄️",   duration: "48 hours" },
+      { condition: "Diluted in NS",       temp: "Room temp 🌡️", duration: "12 hours" },
+      { condition: "Diluted in NS",       temp: "2–8 °C ❄️",   duration: "5 days" },
+    ],
+    pearls: [
+      { icon: "❄️", text: "For extended infusion, use NS only — D5W has shorter stability and may not support 4-hour infusion window." },
+      { icon: "⚠️", text: "Incompatible with aminoglycosides (tobramycin, gentamicin) — separate IV lines required." },
+      { icon: "💡", text: "Galaxy frozen premix: thaw at RT 2–3 hrs or refrigerator overnight. Use within 12 hrs (RT) or 5 days (refrigerated) after thaw." },
+    ],
+    note: null
+  },
+  {
+    name: "Meropenem",
+    generic: "Meropenem",
+    class: "Carbapenem Antibiotic",
+    aliases: ["merrem"],
+    alerts: [],
+    diluents: [
+      { sol: "NS (0.9% NaCl)", bags: ["50 mL","100 mL","250 mL"], note: "Preferred — most stable" },
+      { sol: "D5W",             bags: ["50 mL","100 mL"],           note: "Compatible; shorter stability" },
+    ],
+    concentration: { min: "1 mg/mL", max: "20 mg/mL (infusion); 50 mg/mL (bolus, central preferred)", note: "Extended infusion (3 hr) used for higher MIC organisms — prepare fresh, no premix available." },
+    stability: [
+      { condition: "Diluted in NS", temp: "Room temp 🌡️", duration: "4 hours" },
+      { condition: "Diluted in NS", temp: "2–8 °C ❄️",   duration: "24 hours" },
+      { condition: "Diluted in D5W",temp: "Room temp 🌡️", duration: "1 hour" },
+      { condition: "Diluted in D5W",temp: "2–8 °C ❄️",   duration: "8 hours" },
+    ],
+    pearls: [
+      { icon: "⏱️", text: "Use NS whenever possible — significantly longer BUD vs. D5W." },
+      { icon: "🌡️", text: "Do not freeze reconstituted solution." },
+    ],
+    note: "Extended infusion must be prepared fresh — schedule close to administration time."
+  },
+  {
+    name: "Cefazolin",
+    generic: "Cefazolin Sodium",
+    class: "1st-Gen Cephalosporin",
+    aliases: ["ancef","kefzol"],
+    alerts: [],
+    diluents: [
+      { sol: "NS (0.9% NaCl)",   bags: ["50 mL","100 mL"], note: "Compatible" },
+      { sol: "D5W",               bags: ["50 mL","100 mL"], note: "Compatible" },
+      { sol: "SWFI (IVP only)",   bags: ["Syringe"],         note: "Reconstitution / IVP only" },
+    ],
+    concentration: { min: "20 mg/mL (infusion)", max: "138 mg/mL (IVP, 3–5 min)", note: "Infusion typically over 15–30 min. Surgical prophylaxis: 2 g (3 g if >120 kg)." },
+    stability: [
+      { condition: "Reconstituted vial",  temp: "Room temp 🌡️", duration: "24 hours" },
+      { condition: "Reconstituted vial",  temp: "2–8 °C ❄️",   duration: "10 days" },
+      { condition: "Diluted in NS or D5W",temp: "Room temp 🌡️", duration: "48 hours" },
+      { condition: "Diluted in NS or D5W",temp: "2–8 °C ❄️",   duration: "14 days" },
+      { condition: "Frozen",              temp: "–20 °C 🧊",   duration: "12 weeks" },
+    ],
+    pearls: [
+      { icon: "✅", text: "One of the most stable beta-lactams — well-suited for batch preparation." },
+      { icon: "🎨", text: "Solution is pale yellow; darker color does not necessarily indicate loss of potency." },
+    ],
+    note: "Drug of choice for surgical prophylaxis for most procedures."
+  },
+  {
+    name: "Cefepime",
+    generic: "Cefepime HCl (Maxipime®)",
+    class: "4th-Gen Cephalosporin",
+    aliases: ["maxipime"],
+    alerts: [],
+    diluents: [
+      { sol: "NS (0.9% NaCl)", bags: ["50 mL","100 mL"], note: "Compatible" },
+      { sol: "D5W",             bags: ["50 mL","100 mL"], note: "Compatible" },
+      { sol: "LR",              bags: ["50 mL","100 mL"], note: "Compatible" },
+    ],
+    concentration: { min: "10 mg/mL", max: "40 mg/mL", note: "Infuse over 30 min (standard) or 3–4 hrs (extended infusion for resistant organisms). Renal dose adjustment required." },
+    stability: [
+      { condition: "Diluted in NS or D5W", temp: "Room temp 🌡️", duration: "24 hours" },
+      { condition: "Diluted in NS or D5W", temp: "2–8 °C ❄️",   duration: "7 days" },
+      { condition: "Frozen",               temp: "–20 °C 🧊",   duration: "14 weeks" },
+    ],
+    pearls: [
+      { icon: "⚠️", text: "Neurotoxicity risk (encephalopathy, seizures) — particularly in patients with renal impairment. Dose-adjust for CrCl." },
+      { icon: "🎨", text: "Solution ranges from colorless to amber — color does not indicate potency loss unless markedly dark." },
+    ],
+    note: null
+  },
+  {
+    name: "Ampicillin-Sulbactam",
+    generic: "Ampicillin/Sulbactam (Unasyn®)",
+    class: "Beta-lactam / BLI",
+    aliases: ["unasyn","amp-sulbactam"],
+    alerts: [],
+    diluents: [
+      { sol: "NS (0.9% NaCl)", bags: ["50 mL","100 mL"], note: "Preferred; longest stability" },
+      { sol: "D5W",             bags: ["50 mL","100 mL"], note: "Compatible; significantly shorter stability" },
+    ],
+    concentration: { min: "3 mg/mL", max: "45 mg/mL (IVP); 30 mg/mL (infusion)", note: "Infuse over 15–30 min. IVP over ≤3 min." },
+    stability: [
+      { condition: "Diluted in NS", temp: "Room temp 🌡️", duration: "8 hours" },
+      { condition: "Diluted in NS", temp: "2–8 °C ❄️",   duration: "48 hours" },
+      { condition: "Diluted in D5W",temp: "Room temp 🌡️", duration: "2 hours" },
+      { condition: "Diluted in D5W",temp: "2–8 °C ❄️",   duration: "4 hours" },
+    ],
+    pearls: [
+      { icon: "⏱️", text: "Short stability — prepare close to administration time. Not ideal for batch compounding." },
+      { icon: "❄️", text: "Use NS — D5W has much shorter BUD." },
+    ],
+    note: null
+  },
+  {
+    name: "Ciprofloxacin",
+    generic: "Ciprofloxacin HCl",
+    class: "Fluoroquinolone",
+    aliases: ["cipro"],
+    alerts: ["light"],
+    diluents: [
+      { sol: "NS (0.9% NaCl)", bags: ["100 mL (premix)","200 mL"], note: "Available as premix" },
+      { sol: "D5W",             bags: ["100 mL (premix)","200 mL"], note: "Available as premix" },
+    ],
+    concentration: { min: "1 mg/mL", max: "2 mg/mL (peripheral); up to 10 mg/mL (central)", note: "Standard: 400 mg/200 mL (2 mg/mL). Infuse 400 mg over 60 min." },
+    stability: [
+      { condition: "Premix bag", temp: "Room temp 🌡️", duration: "14 days" },
+      { condition: "Premix bag", temp: "2–8 °C ❄️",   duration: "6 months" },
+    ],
+    pearls: [
+      { icon: "☀️", text: "Protect from direct sunlight; brief exposure during infusion is acceptable." },
+      { icon: "🔄", text: "Oral bioavailability ~70–80% — IV-to-PO switch appropriate when patient is clinically stable." },
+      { icon: "🦴", text: "Black box: tendinitis / tendon rupture risk. C. diff risk." },
+    ],
+    note: null
+  },
+  {
+    name: "Azithromycin",
+    generic: "Azithromycin (Zithromax® IV)",
+    class: "Macrolide Antibiotic",
+    aliases: ["zithromax","z-pack iv"],
+    alerts: [],
+    diluents: [
+      { sol: "NS (0.9% NaCl)", bags: ["250 mL","500 mL"], note: "Dilute to 1–2 mg/mL" },
+      { sol: "D5W",             bags: ["250 mL","500 mL"], note: "Compatible" },
+      { sol: "LR",              bags: ["250 mL"],           note: "Compatible" },
+    ],
+    concentration: { min: "1 mg/mL", max: "2 mg/mL", note: "1 mg/mL: infuse over 60 min. 2 mg/mL: infuse over 3 hrs. Do not give faster — phlebitis and cardiac risk." },
+    stability: [
+      { condition: "Diluted in NS or D5W", temp: "Room temp 🌡️", duration: "24 hours" },
+      { condition: "Diluted in NS or D5W", temp: "2–8 °C ❄️",   duration: "7 days" },
+    ],
+    pearls: [
+      { icon: "💓", text: "QTc prolongation risk — caution with other QT-prolonging drugs or in patients with cardiac disease." },
+      { icon: "⚠️", text: "Phlebitis common — use lower concentration (1 mg/mL) when possible." },
+      { icon: "🔄", text: "High oral bioavailability — IV-to-PO switch is usually appropriate once patient tolerates oral." },
+    ],
+    note: null
+  },
+  {
+    name: "Metronidazole",
+    generic: "Metronidazole (Flagyl® IV)",
+    class: "Nitroimidazole Antibiotic",
+    aliases: ["flagyl"],
+    alerts: ["light"],
+    diluents: [
+      { sol: "Premixed in NS or D5W", bags: ["100 mL (500 mg/100 mL)"], note: "Ready-to-use; no dilution needed" },
+    ],
+    concentration: { min: "5 mg/mL (standard premix)", max: "8 mg/mL", note: "Infuse over 30–60 min. Do not exceed 500 mg over <30 min." },
+    stability: [
+      { condition: "Premix bag (intact)",  temp: "Room temp 🌡️", duration: "Per manufacturer expiry" },
+      { condition: "Opened / activated",   temp: "Room temp 🌡️", duration: "30 days" },
+    ],
+    pearls: [
+      { icon: "☀️", text: "Protect from light — store in carton until use. Discard visibly darkened solutions." },
+      { icon: "⚠️", text: "Contains ~28 mEq sodium per 500 mg dose — monitor in sodium-restricted patients." },
+      { icon: "🍷", text: "Avoid alcohol during therapy and for 48 hrs after last dose (disulfiram-like reaction)." },
+    ],
+    note: "Some premix formulations may precipitate if refrigerated — verify with manufacturer before refrigerating."
+  },
+  {
+    name: "Acyclovir",
+    generic: "Acyclovir Sodium",
+    class: "Antiviral",
+    aliases: ["zovirax"],
+    alerts: [],
+    diluents: [
+      { sol: "NS (0.9% NaCl)", bags: ["100 mL","250 mL"], note: "Preferred; dilute to ≤7 mg/mL" },
+      { sol: "D5W",             bags: ["100 mL","250 mL"], note: "Compatible" },
+      { sol: "LR",              bags: ["100 mL"],           note: "Compatible" },
+    ],
+    concentration: { min: "≤7 mg/mL", max: "≤7 mg/mL (peripheral max — reduce nephrotoxicity and phlebitis)", note: "Infuse over ≥1 hour. Adequate hydration required to prevent crystalluria and nephrotoxicity." },
+    stability: [
+      { condition: "Reconstituted (25 mg/mL)", temp: "Room temp 🌡️", duration: "12 hours" },
+      { condition: "Diluted in NS",              temp: "Room temp 🌡️", duration: "12 hours" },
+      { condition: "Diluted in NS",              temp: "2–8 °C ❄️",   duration: "24 hours" },
+    ],
+    pearls: [
+      { icon: "💧", text: "Maintain adequate hydration — acyclovir can crystallize in renal tubules causing acute kidney injury." },
+      { icon: "⚠️", text: "Do not exceed 7 mg/mL in peripheral lines — higher concentrations increase phlebitis risk significantly." },
+      { icon: "🌡️", text: "Do not refrigerate reconstituted vial — precipitation may occur. Store diluted solution in refrigerator is acceptable." },
+    ],
+    note: "Renal dose adjustment required (CrCl-based). Obesity: dose based on ideal body weight."
+  },
+  {
+    name: "Fluconazole",
+    generic: "Fluconazole (Diflucan®)",
+    class: "Azole Antifungal",
+    aliases: ["diflucan"],
+    alerts: [],
+    diluents: [
+      { sol: "Premixed in NS",  bags: ["100 mL (200 mg)","200 mL (400 mg)"], note: "Ready-to-use" },
+      { sol: "Premixed in D5W", bags: ["100 mL","200 mL"],                    note: "Ready-to-use" },
+    ],
+    concentration: { min: "2 mg/mL (standard premix)", max: "2 mg/mL", note: "Infuse at ≤200 mg/hour (100 mL/hr). Do not pressurize or add to IV bag." },
+    stability: [
+      { condition: "Premix bag (intact)",  temp: "Room temp 🌡️", duration: "Per manufacturer expiry" },
+      { condition: "Premix bag (opened)",  temp: "2–8 °C ❄️",   duration: "72 hours" },
+    ],
+    pearls: [
+      { icon: "🔄", text: "High oral bioavailability (~90%) — IV-to-PO switch appropriate once tolerating oral. Identical dosing." },
+      { icon: "💊", text: "Multiple CYP450 drug interactions — check with QTc-prolonging agents, warfarin, calcineurin inhibitors." },
+      { icon: "🌡️", text: "Do not add medications or supplements to fluconazole bags." },
+    ],
+    note: null
+  },
+
+  // ── CARDIOVASCULAR ─────────────────────────────────────────────────────────
+  {
+    name: "Amiodarone",
+    generic: "Amiodarone HCl (Nexterone®)",
+    class: "Antiarrhythmic (Class III)",
+    aliases: ["nexterone","cordarone iv"],
+    alerts: ["highalert","light","vesicant","d5only","filter"],
+    diluents: [
+      { sol: "D5W ONLY",   bags: ["100 mL","250 mL","500 mL"], note: "⚠️ Use D5W exclusively — NS may cause precipitation" },
+    ],
+    concentration: { min: "1–1.5 mg/mL (loading)", max: "6 mg/mL (maintenance, central only); ≤2 mg/mL peripheral", note: "Loading: 150 mg over 10 min, then 1 mg/min × 6 hrs, then 0.5 mg/min × 18 hrs. Use in-line filter." },
+    stability: [
+      { condition: "Diluted in D5W (PVC bag)",    temp: "Room temp 🌡️", duration: "24 hours" },
+      { condition: "Diluted in D5W (glass/PE bag)",temp: "Room temp 🌡️", duration: "2 hours (at ≥3 mg/mL)" },
+    ],
+    pearls: [
+      { icon: "🚨", text: "Use D5W ONLY — precipitates in NS. Use polyolefin or glass containers when possible at higher concentrations; drug adsorbs to PVC tubing (~20% loss)." },
+      { icon: "☀️", text: "Protect from light — store in original carton. Discard if solution turns blue-grey." },
+      { icon: "💧", text: "Significant phlebitis risk via peripheral lines — use largest available vein or central access for infusions >2 mg/mL." },
+      { icon: "💓", text: "Continuous cardiac monitoring and resuscitation equipment required during loading." },
+    ],
+    note: "ISMP High-Alert Medication. Numerous drug interactions; long half-life (40–55 days). Monitor thyroid, LFTs, pulmonary function with prolonged use."
+  },
+  {
+    name: "Diltiazem",
+    generic: "Diltiazem HCl (Cardizem®)",
+    class: "Calcium Channel Blocker",
+    aliases: ["cardizem","cardizem cd iv"],
+    alerts: [],
+    diluents: [
+      { sol: "NS (0.9% NaCl)", bags: ["100 mL","250 mL"], note: "Compatible" },
+      { sol: "D5W",             bags: ["100 mL","250 mL"], note: "Compatible" },
+      { sol: "D5½NS",           bags: ["100 mL","250 mL"], note: "Compatible" },
+    ],
+    concentration: { min: "1 mg/mL (standard infusion)", max: "Bolus: undiluted (5 mg/mL)", note: "Bolus: 0.25 mg/kg over 2 min. Continuous infusion: 5–15 mg/hr (standard: 125 mg/125 mL or 250 mg/250 mL = 1 mg/mL)." },
+    stability: [
+      { condition: "Diluted in NS, D5W, or D5½NS", temp: "Room temp 🌡️", duration: "24 hours" },
+      { condition: "Diluted in NS, D5W, or D5½NS", temp: "2–8 °C ❄️",   duration: "14 days" },
+    ],
+    pearls: [
+      { icon: "💓", text: "Continuous cardiac monitoring required. Avoid in heart failure with reduced EF, sick sinus syndrome (without pacemaker), or WPW with AFib." },
+      { icon: "🌡️", text: "Protect from excessive heat; stable at room temperature." },
+      { icon: "⚠️", text: "Do not mix with furosemide or phenytoin — incompatible." },
+    ],
+    note: null
+  },
+  {
+    name: "Labetalol",
+    generic: "Labetalol HCl (Trandate®)",
+    class: "Alpha/Beta-Blocker",
+    aliases: ["trandate","normodyne"],
+    alerts: [],
+    diluents: [
+      { sol: "NS (0.9% NaCl)", bags: ["200 mL","250 mL"], note: "Compatible (1 mg/mL)" },
+      { sol: "D5W",             bags: ["200 mL","250 mL"], note: "Compatible" },
+    ],
+    concentration: { min: "1 mg/mL (infusion)", max: "2 mg/mL; bolus: undiluted (5 mg/mL)", note: "Bolus: 20 mg IVP over 2 min, repeat 40–80 mg q10 min (max 300 mg). Infusion: 200 mg/200 mL = 1 mg/mL at 2 mg/min." },
+    stability: [
+      { condition: "Diluted in NS or D5W", temp: "Room temp 🌡️", duration: "24 hours" },
+      { condition: "Diluted in NS or D5W", temp: "2–8 °C ❄️",   duration: "24 hours" },
+    ],
+    pearls: [
+      { icon: "🤰", text: "Commonly used in hypertensive urgency in pregnancy — generally considered safe." },
+      { icon: "⚠️", text: "Avoid in acute decompensated heart failure, reactive airway disease, bradycardia, or >1st-degree heart block." },
+      { icon: "🛏️", text: "Keep patient supine during and 3 hours after IV administration — orthostatic hypotension risk." },
+    ],
+    note: null
+  },
+  {
+    name: "Norepinephrine",
+    generic: "Norepinephrine Bitartrate (Levophed®)",
+    class: "Vasopressor / Catecholamine",
+    aliases: ["levophed","norepi","levo"],
+    alerts: ["vesicant","highalert"],
+    diluents: [
+      { sol: "D5W",             bags: ["250 mL","500 mL"], note: "Preferred by most references" },
+      { sol: "D5NS",            bags: ["250 mL","500 mL"], note: "Compatible" },
+      { sol: "NS (0.9% NaCl)", bags: ["250 mL","500 mL"], note: "Compatible; acceptable alternative" },
+    ],
+    concentration: { min: "4 mcg/mL", max: "16 mcg/mL (peripheral short-term); higher via central", note: "Standard: 4 mg/250 mL (16 mcg/mL) or 8 mg/250 mL (32 mcg/mL). Central line strongly preferred for prolonged use." },
+    stability: [
+      { condition: "Diluted in D5W or NS", temp: "Room temp 🌡️", duration: "24 hours" },
+    ],
+    pearls: [
+      { icon: "🚨", text: "Severe vesicant — central venous access strongly preferred. Monitor peripheral IV site every 1–2 hrs." },
+      { icon: "🩹", text: "Extravasation antidote: phentolamine 5–10 mg in 10 mL NS injected into affected area." },
+      { icon: "☀️", text: "Protect from light. Discard if solution is brown, pink, or contains precipitate." },
+      { icon: "💉", text: "Use smart pump with drug library. Wean gradually — abrupt discontinuation may cause hypotension." },
+    ],
+    note: "ISMP High-Alert Medication. First-line vasopressor for septic shock per Surviving Sepsis Campaign guidelines."
+  },
+  {
+    name: "Dopamine",
+    generic: "Dopamine HCl",
+    class: "Vasopressor / Catecholamine",
+    aliases: ["intropin"],
+    alerts: ["vesicant","highalert"],
+    diluents: [
+      { sol: "D5W",             bags: ["250 mL","500 mL"], note: "Preferred" },
+      { sol: "NS (0.9% NaCl)", bags: ["250 mL","500 mL"], note: "Compatible" },
+      { sol: "D5LR",            bags: ["250 mL"],           note: "Compatible" },
+    ],
+    concentration: { min: "0.8 mg/mL", max: "3.2 mg/mL", note: "Standard: 400 mg/250 mL (1.6 mg/mL) or 800 mg/500 mL. Rates: 2–5 mcg/kg/min (renal), 5–10 (cardiac), >10 (vasopressor)." },
+    stability: [
+      { condition: "Diluted in D5W or NS", temp: "Room temp 🌡️", duration: "24 hours" },
+    ],
+    pearls: [
+      { icon: "🚨", text: "Severe vesicant — central line preferred. Phentolamine is the antidote for extravasation." },
+      { icon: "⚠️", text: "Do not use in acidic solutions — degradation accelerates at low pH." },
+      { icon: "🎨", text: "Discard if solution is darker than slightly yellow or discolored in any other way." },
+    ],
+    note: "ISMP High-Alert Medication. Use smart pump with drug library. Tachyarrhythmia risk limits use vs. norepinephrine."
+  },
+  {
+    name: "Epinephrine",
+    generic: "Epinephrine (Adrenalin®)",
+    class: "Vasopressor / Catecholamine",
+    aliases: ["adrenalin","epi drip"],
+    alerts: ["vesicant","highalert","light"],
+    diluents: [
+      { sol: "NS (0.9% NaCl)", bags: ["250 mL","500 mL"], note: "Preferred" },
+      { sol: "D5W",             bags: ["250 mL","500 mL"], note: "Compatible" },
+    ],
+    concentration: { min: "1 mcg/mL", max: "64 mcg/mL (central); ≤16 mcg/mL (peripheral, short-term)", note: "Standard infusion: 1 mg/250 mL (4 mcg/mL) to 4 mg/250 mL (16 mcg/mL). Central line preferred." },
+    stability: [
+      { condition: "Diluted in NS or D5W", temp: "Room temp 🌡️", duration: "24 hours" },
+    ],
+    pearls: [
+      { icon: "🚨", text: "Severe vesicant — central line preferred for continuous infusions. Phentolamine for extravasation." },
+      { icon: "☀️", text: "Protect from light. Discard if pink, brown, or oxidized." },
+      { icon: "💉", text: "Do NOT confuse epinephrine concentrations (1:1,000 vs. 1:10,000) — read label carefully." },
+    ],
+    note: "ISMP High-Alert Medication. Independent double-check required. Smart pump with drug library mandatory."
+  },
+  {
+    name: "Vasopressin",
+    generic: "Vasopressin (Vasostrict®)",
+    class: "Vasopressor / Antidiuretic Hormone",
+    aliases: ["vasostrict","ADH"],
+    alerts: ["highalert"],
+    diluents: [
+      { sol: "NS (0.9% NaCl)", bags: ["100 mL","250 mL"], note: "Preferred" },
+      { sol: "D5W",             bags: ["100 mL","250 mL"], note: "Compatible" },
+    ],
+    concentration: { min: "0.1 units/mL", max: "1 unit/mL", note: "Standard for septic shock: 20 units/100 mL NS (0.2 units/mL). Fixed dose: 0.03–0.04 units/min (not titrated)." },
+    stability: [
+      { condition: "Diluted in NS or D5W", temp: "Room temp 🌡️", duration: "24 hours" },
+      { condition: "Diluted in NS or D5W", temp: "2–8 °C ❄️",   duration: "24 hours" },
+    ],
+    pearls: [
+      { icon: "💉", text: "Fixed-dose infusion in septic shock (0.03 units/min) — not typically titrated like other vasopressors." },
+      { icon: "⚠️", text: "Risk of mesenteric and coronary ischemia — monitor for abdominal pain and ECG changes." },
+      { icon: "🌡️", text: "Store unopened vials refrigerated. Stable at room temperature after dilution." },
+    ],
+    note: "ISMP High-Alert Medication. Primarily used as adjunct to norepinephrine in refractory septic shock."
+  },
+  {
+    name: "Phenylephrine",
+    generic: "Phenylephrine HCl (Vazculep®)",
+    class: "Alpha-1 Agonist / Vasopressor",
+    aliases: ["vazculep","neo-synephrine"],
+    alerts: ["highalert"],
+    diluents: [
+      { sol: "NS (0.9% NaCl)", bags: ["250 mL","500 mL"], note: "Compatible" },
+      { sol: "D5W",             bags: ["250 mL","500 mL"], note: "Compatible" },
+    ],
+    concentration: { min: "20 mcg/mL", max: "400 mcg/mL (central); ≤100 mcg/mL (peripheral)", note: "Standard: 100 mg/250 mL = 400 mcg/mL. Infusion: 0.5–6 mcg/kg/min. Bolus: 50–200 mcg IVP." },
+    stability: [
+      { condition: "Diluted in NS or D5W", temp: "Room temp 🌡️", duration: "48 hours" },
+    ],
+    pearls: [
+      { icon: "💓", text: "Pure alpha-agonist — no beta activity. Preferred when tachycardia is a concern." },
+      { icon: "⚠️", text: "Reflex bradycardia possible — monitor HR." },
+      { icon: "🌡️", text: "Store at room temperature; protect from light." },
+    ],
+    note: "ISMP High-Alert Medication. May be given peripherally for short-term use at lower concentrations."
+  },
+
+  // ── ELECTROLYTES ───────────────────────────────────────────────────────────
+  {
+    name: "Potassium Chloride",
+    generic: "Potassium Chloride (KCl)",
+    class: "Electrolyte — Potassium",
+    aliases: ["KCl","K replacement","potassium"],
+    alerts: ["vesicant","highalert"],
+    diluents: [
+      { sol: "NS (0.9% NaCl)", bags: ["100 mL","250 mL","500 mL","1000 mL"], note: "Preferred for replacement" },
+      { sol: "D5W",             bags: ["100 mL","250 mL"],                     note: "Less common for acute replacement" },
+    ],
+    concentration: { min: "10 mEq/100 mL (peripheral)", max: "20 mEq/100 mL (peripheral max); 40 mEq/100 mL (central ONLY)", note: "NEVER give undiluted. Max peripheral rate: 10 mEq/hr. >10 mEq/hr requires cardiac monitoring." },
+    stability: [
+      { condition: "Admixture in NS or D5W", temp: "Room temp 🌡️", duration: "Use per institution BUD" },
+    ],
+    pearls: [
+      { icon: "🚨", text: "HIGH ALERT — concentrated KCl vials must be stored separately from patient care areas. Most institutions use premixed bags only." },
+      { icon: "💧", text: "Vesicant — verify IV patency before and during infusion. Extravasation can cause tissue necrosis." },
+      { icon: "💓", text: "Cardiac monitor required for rates >10 mEq/hr or in patients with renal impairment." },
+    ],
+    note: "ISMP High-Alert Medication. Max peripheral concentration 20 mEq/100 mL. Central line required for concentrations >20 mEq/100 mL."
+  },
+  {
+    name: "Magnesium Sulfate",
+    generic: "Magnesium Sulfate (MgSO4)",
+    class: "Electrolyte — Magnesium",
+    aliases: ["mag","mag sulfate","MgSO4"],
+    alerts: ["highalert"],
+    diluents: [
+      { sol: "NS (0.9% NaCl)", bags: ["50 mL","100 mL","250 mL","1000 mL"], note: "Compatible" },
+      { sol: "D5W",             bags: ["50 mL","100 mL","250 mL"],            note: "Compatible" },
+    ],
+    concentration: { min: "1 mEq/mL (20%, premix)", max: "≤20% peripheral; ≤40% central (critically ill)", note: "Eclampsia load: 4–6 g over 15–20 min. Maintenance: 1–2 g/hr. Max rate: 150 mg/min." },
+    stability: [
+      { condition: "Admixture in NS or D5W", temp: "Room temp 🌡️", duration: "Use per institution BUD" },
+    ],
+    pearls: [
+      { icon: "🚨", text: "HIGH ALERT — toxicity can cause cardiac arrest. Monitor patellar reflex, respirations (>12/min), and urine output (>25 mL/hr)." },
+      { icon: "💊", text: "Toxicity antidote: Calcium gluconate 1 g IV over 3 minutes." },
+      { icon: "🌡️", text: "Do not refrigerate — precipitation may occur at low temperatures." },
+      { icon: "🤰", text: "Avoid >5–7 days in pregnancy — neonatal bone effects (FDA warning)." },
+    ],
+    note: "ISMP High-Alert Medication."
+  },
+  {
+    name: "Calcium Gluconate",
+    generic: "Calcium Gluconate",
+    class: "Electrolyte — Calcium",
+    aliases: ["calcium","Ca gluconate"],
+    alerts: ["vesicant"],
+    diluents: [
+      { sol: "NS (0.9% NaCl)", bags: ["100 mL","250 mL"], note: "Compatible for infusion; dilute to ≤10 mg/mL" },
+      { sol: "D5W",             bags: ["100 mL","250 mL"], note: "Compatible" },
+      { sol: "Undiluted (IVP)", bags: ["Syringe"],         note: "Slow IVP via central line; do not give rapidly" },
+    ],
+    concentration: { min: "10 mg/mL (1 g/100 mL) for infusion", max: "100 mg/mL (undiluted vial) via central for slow push", note: "Infuse over 1–2 hrs for replacement. IVP: 1 g over 10 min minimum. Never give rapid IV push (cardiac arrest risk)." },
+    stability: [
+      { condition: "Diluted in NS or D5W", temp: "Room temp 🌡️", duration: "24 hours" },
+    ],
+    pearls: [
+      { icon: "🚨", text: "Rapid IV push can cause cardiac arrest — never give rapidly. Infuse slowly with cardiac monitoring." },
+      { icon: "💧", text: "Vesicant — verify IV patency. Extravasation causes tissue necrosis. Central line preferred for concentrated solutions." },
+      { icon: "⚠️", text: "Do NOT mix with phosphate-containing solutions or sodium bicarbonate — will precipitate." },
+      { icon: "💊", text: "Antidote for magnesium toxicity and hyperkalemia-induced cardiac toxicity." },
+    ],
+    note: null
+  },
+
+  // ── ANALGESICS / SEDATIVES ─────────────────────────────────────────────────
+  {
+    name: "Morphine",
+    generic: "Morphine Sulfate",
+    class: "Opioid Analgesic",
+    aliases: ["morphine sulfate","MS Contin IV"],
+    alerts: ["highalert"],
+    diluents: [
+      { sol: "NS (0.9% NaCl)", bags: ["100 mL","250 mL"], note: "Compatible" },
+      { sol: "D5W",             bags: ["100 mL","250 mL"], note: "Compatible" },
+      { sol: "SWFI (IVP)",      bags: ["Syringe"],         note: "Dilute for IVP administration" },
+    ],
+    concentration: { min: "0.5 mg/mL (infusion)", max: "5 mg/mL (infusion); 1–5 mg/mL (IVP)", note: "Infuse over 4–5 min for IVP. Patient weight and clinical context determine infusion rate." },
+    stability: [
+      { condition: "Diluted in NS or D5W", temp: "Room temp 🌡️", duration: "24 hours" },
+      { condition: "Diluted in NS or D5W", temp: "2–8 °C ❄️",   duration: "24 hours" },
+    ],
+    pearls: [
+      { icon: "🚨", text: "HIGH ALERT opioid. Respiratory depression risk — naloxone must be immediately available." },
+      { icon: "⚠️", text: "Histamine release may cause flushing, pruritus, hypotension — infuse slowly." },
+      { icon: "🌡️", text: "Store at room temperature; protect from light. Do not refrigerate." },
+    ],
+    note: "ISMP High-Alert Medication. Renal dose adjustment required (morphine-6-glucuronide accumulates in renal failure)."
+  },
+  {
+    name: "Hydromorphone",
+    generic: "Hydromorphone HCl (Dilaudid®)",
+    class: "Opioid Analgesic",
+    aliases: ["dilaudid","HYDROmorphone"],
+    alerts: ["highalert"],
+    diluents: [
+      { sol: "NS (0.9% NaCl)", bags: ["50 mL","100 mL"], note: "Compatible" },
+      { sol: "D5W",             bags: ["50 mL","100 mL"], note: "Compatible" },
+      { sol: "SWFI (IVP)",      bags: ["Syringe"],         note: "For bolus dosing" },
+    ],
+    concentration: { min: "0.1 mg/mL (infusion)", max: "1 mg/mL (infusion); 0.5–1 mg/mL (IVP)", note: "~5× more potent than morphine. IVP over 2–5 min." },
+    stability: [
+      { condition: "Diluted in NS or D5W", temp: "Room temp 🌡️", duration: "24 hours" },
+      { condition: "Diluted in NS or D5W", temp: "2–8 °C ❄️",   duration: "24 hours" },
+    ],
+    pearls: [
+      { icon: "🚨", text: "HIGH ALERT opioid — ISMP tall man lettering: HYDROmorphone. Do NOT confuse with morphine. Naloxone must be available." },
+      { icon: "⚠️", text: "Concentrated vials (10 mg/mL) for opioid-tolerant patients only — clearly label when dispensing." },
+      { icon: "🌡️", text: "Store at room temperature; protect from light." },
+    ],
+    note: "ISMP High-Alert Medication. Tall man lettering used to distinguish from morphine."
+  },
+  {
+    name: "Fentanyl",
+    generic: "Fentanyl Citrate",
+    class: "Opioid Analgesic",
+    aliases: ["sublimaze"],
+    alerts: ["highalert"],
+    diluents: [
+      { sol: "NS (0.9% NaCl)", bags: ["100 mL","250 mL"], note: "Compatible" },
+      { sol: "D5W",             bags: ["100 mL","250 mL"], note: "Compatible" },
+      { sol: "Undiluted (IVP)", bags: ["Syringe"],         note: "50 mcg/mL undiluted for bolus" },
+    ],
+    concentration: { min: "10 mcg/mL (infusion)", max: "50 mcg/mL (infusion); undiluted for bolus", note: "~100× more potent than morphine by weight. IVP over 1–2 min. Infusion: 25–200 mcg/hr, titrated." },
+    stability: [
+      { condition: "Diluted in NS or D5W", temp: "Room temp 🌡️", duration: "24 hours" },
+    ],
+    pearls: [
+      { icon: "🚨", text: "HIGH ALERT opioid. Chest wall rigidity (wooden chest syndrome) with rapid large IV doses. Naloxone must be immediately available." },
+      { icon: "💉", text: "Rapid bolus can cause severe rigidity — administer slowly, especially at higher doses." },
+      { icon: "🌡️", text: "Store at room temperature; protect from light." },
+    ],
+    note: "ISMP High-Alert Medication. Smart pump with drug library required for infusions."
+  },
+  {
+    name: "Midazolam",
+    generic: "Midazolam HCl (Versed®)",
+    class: "Benzodiazepine Sedative",
+    aliases: ["versed"],
+    alerts: ["highalert"],
+    diluents: [
+      { sol: "NS (0.9% NaCl)", bags: ["50 mL","100 mL","250 mL"], note: "Compatible" },
+      { sol: "D5W",             bags: ["50 mL","100 mL","250 mL"], note: "Compatible" },
+    ],
+    concentration: { min: "0.5 mg/mL (infusion)", max: "5 mg/mL (infusion)", note: "ICU sedation standard: 50 mg/50 mL NS (1 mg/mL). Procedural sedation IVP: 1–2.5 mg over ≥2 min." },
+    stability: [
+      { condition: "Diluted in NS or D5W", temp: "Room temp 🌡️", duration: "24 hours" },
+      { condition: "Diluted in NS or D5W", temp: "2–8 °C ❄️",   duration: "72 hours" },
+    ],
+    pearls: [
+      { icon: "🚨", text: "HIGH ALERT. Respiratory depression risk — resuscitation equipment and flumazenil must be immediately available." },
+      { icon: "⚠️", text: "Propylene glycol vehicle — risk of toxicity with prolonged high-dose infusions (metabolic acidosis, renal failure)." },
+      { icon: "🌡️", text: "Store at room temperature." },
+    ],
+    note: "ISMP High-Alert Medication. Black box warning: for IV use, only in settings with continuous monitoring and resuscitation equipment available."
+  },
+  {
+    name: "Lorazepam",
+    generic: "Lorazepam (Ativan®)",
+    class: "Benzodiazepine Sedative / Anticonvulsant",
+    aliases: ["ativan"],
+    alerts: ["highalert","light","refrig"],
+    diluents: [
+      { sol: "NS (0.9% NaCl)", bags: ["50 mL","100 mL"], note: "Preferred for infusion; dilute 1:1 minimum" },
+      { sol: "D5W",             bags: ["50 mL","100 mL"], note: "Compatible" },
+      { sol: "SWFI",            bags: ["Syringe"],         note: "Dilute 1:1 minimum for IVP" },
+    ],
+    concentration: { min: "0.5 mg/mL (infusion)", max: "2 mg/mL (IVP max)", note: "Dilute 1:1 minimum before IV administration. IVP: ≤2 mg/min. Infusion must not exceed 2 mg/mL due to propylene glycol content." },
+    stability: [
+      { condition: "Diluted in NS or D5W", temp: "Room temp 🌡️", duration: "24 hours" },
+      { condition: "Undiluted vial",        temp: "2–8 °C ❄️",   duration: "Per manufacturer expiry" },
+    ],
+    pearls: [
+      { icon: "🚨", text: "HIGH ALERT. Respiratory depression risk — resuscitation equipment and flumazenil must be available." },
+      { icon: "☀️", text: "Protect from light — store vials in carton. Discard if solution contains precipitate." },
+      { icon: "⚠️", text: "Contains propylene glycol — prolonged infusions risk toxicity. Monitor osmol gap with extended use." },
+      { icon: "🌡️", text: "Store vials refrigerated. Use diluted solution within 24 hrs at room temperature." },
+    ],
+    note: "ISMP High-Alert Medication. Do not freeze."
+  },
+
+  // ── GI / MISC ──────────────────────────────────────────────────────────────
+  {
+    name: "Pantoprazole",
+    generic: "Pantoprazole Sodium (Protonix® IV)",
+    class: "Proton Pump Inhibitor",
+    aliases: ["protonix"],
+    alerts: [],
+    diluents: [
+      { sol: "NS (0.9% NaCl)", bags: ["100 mL"], note: "Preferred" },
+      { sol: "D5W",             bags: ["100 mL"], note: "Compatible" },
+      { sol: "LR",              bags: ["100 mL"], note: "Compatible" },
+      { sol: "SWFI (IVP)",      bags: ["10 mL"],  note: "Reconstitute to 4 mg/mL for IVP" },
+    ],
+    concentration: { min: "0.4 mg/mL (40 mg/100 mL)", max: "4 mg/mL (IVP only)", note: "Infusion (40 mg): over 15 min. IVP: over ≥2 min." },
+    stability: [
+      { condition: "Reconstituted vial", temp: "Room temp 🌡️", duration: "6 hours" },
+      { condition: "Diluted in NS/D5W/LR",temp: "Room temp 🌡️", duration: "6 hours" },
+      { condition: "Diluted in NS/D5W/LR",temp: "2–8 °C ❄️",   duration: "24 hours" },
+    ],
+    pearls: [
+      { icon: "⚠️", text: "Incompatible with midazolam and zinc-containing solutions at Y-site." },
+      { icon: "🌡️", text: "Store unreconstituted vials at room temperature. Do not freeze reconstituted solution." },
+    ],
+    note: null
+  },
+  {
+    name: "Ondansetron",
+    generic: "Ondansetron HCl (Zofran®)",
+    class: "5-HT3 Antagonist / Antiemetic",
+    aliases: ["zofran"],
+    alerts: [],
+    diluents: [
+      { sol: "NS (0.9% NaCl)", bags: ["50 mL (premix available)"], note: "Preferred" },
+      { sol: "D5W",             bags: ["50 mL"],                     note: "Compatible" },
+      { sol: "Undiluted (IVP)", bags: ["Syringe"],                   note: "4 mg undiluted over ≥30 sec" },
+    ],
+    concentration: { min: "0.32 mg/mL (16 mg/50 mL)", max: "0.64 mg/mL (32 mg/50 mL)", note: "Infuse over 15 min. IVP 4 mg over ≥30 sec. Single IV dose capped at 16 mg (FDA QTc concern)." },
+    stability: [
+      { condition: "Diluted in NS or D5W", temp: "Room temp 🌡️", duration: "48 hours" },
+      { condition: "Diluted in NS or D5W", temp: "2–8 °C ❄️",   duration: "7 days" },
+    ],
+    pearls: [
+      { icon: "💓", text: "QTc prolongation risk — caution with other QT-prolonging drugs, hypokalemia, hypomagnesemia. Single IV dose max 16 mg." },
+      { icon: "🌡️", text: "Store at room temperature; protect from light." },
+      { icon: "🔄", text: "Oral bioavailability ~60% — IV-to-PO switch appropriate when tolerating oral." },
+    ],
+    note: null
+  },
+  {
+    name: "Acetaminophen IV",
+    generic: "Acetaminophen (Ofirmev®)",
+    class: "Non-opioid Analgesic / Antipyretic",
+    aliases: ["ofirmev","tylenol iv","IV acetaminophen","paracetamol iv"],
+    alerts: [],
+    diluents: [
+      { sol: "Ready-to-use (10 mg/mL)", bags: ["100 mL (1000 mg)","50 mL (500 mg)"], note: "No dilution required" },
+    ],
+    concentration: { min: "10 mg/mL (standard premix)", max: "10 mg/mL", note: "Adults ≥50 kg: 1000 mg q6h or 650 mg q4h. <50 kg: 15 mg/kg q6h. Infuse over 15 min." },
+    stability: [
+      { condition: "Opened premix vial",  temp: "Room temp 🌡️", duration: "6 hours" },
+    ],
+    pearls: [
+      { icon: "🌡️", text: "Store at room temperature. Do not refrigerate opened vials — use within 6 hours of opening." },
+      { icon: "⚠️", text: "Monitor cumulative acetaminophen dose from ALL sources (oral, rectal, IV) — max 4 g/day in adults (2 g/day in hepatic impairment)." },
+      { icon: "🔬", text: "Inspect for particulate matter or discoloration before use. Do not use if cloudy." },
+    ],
+    note: "Volume in bag: 100 mL contains 1000 mg. Dose as volume (e.g., '100 mL') not weight in some systems — verify order."
+  },
+
+  // ── ANTICOAGULANTS ─────────────────────────────────────────────────────────
+  {
+    name: "Heparin",
+    generic: "Heparin Sodium (Unfractionated)",
+    class: "Anticoagulant",
+    aliases: ["UFH","unfractionated heparin","heparin drip"],
+    alerts: ["highalert"],
+    diluents: [
+      { sol: "NS (0.9% NaCl)", bags: ["250 mL","500 mL"], note: "Standard: 25,000 units/250 mL (100 units/mL)" },
+      { sol: "D5W",             bags: ["250 mL","500 mL"], note: "Also used; institutional preference varies" },
+    ],
+    concentration: { min: "1 unit/mL (flush)", max: "100 units/mL (infusion); 200 units/mL (some protocols)", note: "DVT/PE: 25,000 units/500 mL = 50 units/mL. Titrated per aPTT or anti-Xa protocol." },
+    stability: [
+      { condition: "Diluted in NS or D5W", temp: "Room temp 🌡️", duration: "24 hours" },
+    ],
+    pearls: [
+      { icon: "🚨", text: "HIGH ALERT — dose errors can be fatal. ALWAYS use a smart pump with drug library." },
+      { icon: "🔬", text: "Check platelet count baseline, then monitor for HIT after day 4–5 of therapy." },
+      { icon: "⚠️", text: "Multiple concentrations available (1,000; 5,000; 10,000 units/mL vials). Read labels carefully — LASA risk." },
+    ],
+    note: "ISMP High-Alert Medication. Independent double-check recommended. Antidote: protamine sulfate."
+  },
+
+  // ── NEURO / ANTICONVULSANTS ────────────────────────────────────────────────
+  {
+    name: "Levetiracetam",
+    generic: "Levetiracetam (Keppra®)",
+    class: "Anticonvulsant",
+    aliases: ["keppra iv","keppra"],
+    alerts: [],
+    diluents: [
+      { sol: "NS (0.9% NaCl)", bags: ["100 mL"], note: "Compatible" },
+      { sol: "D5W",             bags: ["100 mL"], note: "Compatible" },
+      { sol: "LR",              bags: ["100 mL"], note: "Compatible" },
+    ],
+    concentration: { min: "≤15 mg/mL (1500 mg/100 mL)", max: "15 mg/mL", note: "Infuse over 15 min. May give undiluted if needed at same rate. Renal dose adjustment required." },
+    stability: [
+      { condition: "Diluted in NS, D5W, or LR", temp: "Room temp 🌡️", duration: "24 hours" },
+    ],
+    pearls: [
+      { icon: "✅", text: "Compatible with most common IV solutions. Relatively simple stability profile." },
+      { icon: "🌡️", text: "Store at room temperature." },
+      { icon: "⚠️", text: "Behavioral side effects (agitation, psychosis) — monitor and document patient response." },
+    ],
+    note: "Renal dose adjustment required. CrCl-based dosing tables available in most formularies."
+  },
+
+  // ── STEROIDS ───────────────────────────────────────────────────────────────
+  {
+    name: "Methylprednisolone",
+    generic: "Methylprednisolone Sodium Succinate (Solu-Medrol®)",
+    class: "Corticosteroid",
+    aliases: ["solu-medrol","solumedrol","methyl pred"],
+    alerts: [],
+    diluents: [
+      { sol: "NS (0.9% NaCl)", bags: ["50 mL","100 mL","250 mL"], note: "Compatible" },
+      { sol: "D5W",             bags: ["50 mL","100 mL"],           note: "Compatible" },
+      { sol: "SWFI (Act-O-Vial)",bags: ["Syringe"],                 note: "Mix-O-Vial system for IVP" },
+    ],
+    concentration: { min: "0.5 mg/mL", max: "62.5 mg/mL (IVP); >125 mg doses diluted", note: "Low doses (≤125 mg): IVP over ≥1 min. High doses (≥250 mg): infuse over ≥30 min. Pulse doses (≥1 g): over ≥60 min." },
+    stability: [
+      { condition: "Reconstituted in Act-O-Vial",  temp: "Room temp 🌡️", duration: "48 hours" },
+      { condition: "Diluted in NS or D5W",           temp: "Room temp 🌡️", duration: "24 hours" },
+      { condition: "Diluted in NS or D5W",           temp: "2–8 °C ❄️",   duration: "48 hours" },
+    ],
+    pearls: [
+      { icon: "⚠️", text: "High doses given too rapidly can cause cardiac arrhythmias — do not rush large doses." },
+      { icon: "🌡️", text: "Do not use if solution is discolored or contains precipitate." },
+      { icon: "🔬", text: "Monitor blood glucose — corticosteroids cause significant hyperglycemia." },
+    ],
+    note: null
+  },
+  {
+    name: "Dexamethasone",
+    generic: "Dexamethasone Sodium Phosphate (Decadron®)",
+    class: "Corticosteroid",
+    aliases: ["decadron","dex"],
+    alerts: [],
+    diluents: [
+      { sol: "NS (0.9% NaCl)", bags: ["50 mL","100 mL"], note: "Compatible" },
+      { sol: "D5W",             bags: ["50 mL","100 mL"], note: "Compatible" },
+      { sol: "Undiluted (IVP)", bags: ["Syringe"],         note: "Undiluted (10 mg/mL) for slow IVP" },
+    ],
+    concentration: { min: "0.02 mg/mL", max: "10 mg/mL (undiluted for IVP)", note: "Infuse over 15–30 min for doses >10 mg. IVP for smaller doses over ≥1 min. Infusion preferred for cerebral edema dosing." },
+    stability: [
+      { condition: "Diluted in NS or D5W", temp: "Room temp 🌡️", duration: "24 hours" },
+      { condition: "Diluted in NS or D5W", temp: "2–8 °C ❄️",   duration: "72 hours" },
+    ],
+    pearls: [
+      { icon: "🌡️", text: "Store at room temperature; protect from freezing." },
+      { icon: "🔬", text: "Monitor blood glucose — corticosteroids significantly increase blood sugar." },
+      { icon: "✅", text: "Compatible with most common IV solutions and many medications at Y-site." },
+    ],
+    note: null
+  },
+
+  // ── DIURETICS ──────────────────────────────────────────────────────────────
+  {
+    name: "Furosemide",
+    generic: "Furosemide (Lasix®)",
+    class: "Loop Diuretic",
+    aliases: ["lasix"],
+    alerts: ["light"],
+    diluents: [
+      { sol: "NS (0.9% NaCl)",  bags: ["50 mL","100 mL","250 mL"], note: "Preferred for infusion" },
+      { sol: "D5W",              bags: ["50 mL","100 mL"],           note: "Compatible" },
+      { sol: "Undiluted (IVP)", bags: ["Syringe"],                   note: "Max 4 mg/min for IVP" },
+    ],
+    concentration: { min: "1 mg/mL (continuous infusion)", max: "10 mg/mL (IVP)", note: "IVP: do not exceed 4 mg/min. Continuous infusion: 1–4 mg/mL. High doses >4 mg/min increase ototoxicity risk." },
+    stability: [
+      { condition: "Diluted in NS (infusion)",   temp: "Room temp 🌡️", duration: "24 hours" },
+      { condition: "Undiluted in syringe",        temp: "Room temp 🌡️", duration: "91 days (protect from light)" },
+    ],
+    pearls: [
+      { icon: "☀️", text: "Protect from light — discard if markedly discolored (faint yellow is acceptable)." },
+      { icon: "⚠️", text: "Ototoxicity risk with rates >4 mg/min — do not rush IV push doses." },
+      { icon: "🌡️", text: "Do not refrigerate — precipitation may occur." },
+      { icon: "🔬", text: "Alkaline drug (pH ~9) — incompatible with many acidic drugs. Flush line before and after." },
+    ],
+    note: "Monitor potassium, magnesium, and creatinine. Bumetanide or torsemide if furosemide resistance occurs."
+  },
+
+  // ── INSULIN ────────────────────────────────────────────────────────────────
+  {
+    name: "Insulin Regular",
+    generic: "Regular Insulin Human (Humulin R® / Novolin R®)",
+    class: "Antidiabetic — Insulin Infusion",
+    aliases: ["regular insulin","insulin drip","humulin r iv","novolin r"],
+    alerts: ["highalert"],
+    diluents: [
+      { sol: "NS (0.9% NaCl) ONLY", bags: ["100 mL","250 mL","500 mL"], note: "NS exclusively for infusions. Do NOT use D5W." },
+    ],
+    concentration: { min: "0.5 units/mL", max: "1 unit/mL (standard: 100 units/100 mL NS)", note: "Standard: 100 units in 100 mL NS = 1 unit/mL. Flush 50 mL through tubing before connecting to patient to saturate adsorption sites." },
+    stability: [
+      { condition: "Diluted in NS",          temp: "Room temp 🌡️", duration: "24 hours" },
+      { condition: "Diluted in NS",          temp: "2–8 °C ❄️",   duration: "48 hours" },
+    ],
+    pearls: [
+      { icon: "🚨", text: "HIGH ALERT — insulin is a leading cause of IV medication errors. Independent double-check required for all infusions." },
+      { icon: "⚠️", text: "Insulin adsorbs to PVC tubing — flush first 50 mL through tubing before connecting to patient to saturate binding sites." },
+      { icon: "🌡️", text: "Only REGULAR insulin is appropriate for IV infusions. Never use NPH, glargine, or other long-acting formulations IV." },
+      { icon: "🔬", text: "Monitor blood glucose every 1–2 hrs during infusion per protocol." },
+    ],
+    note: "ISMP High-Alert Medication. Use only with a validated institution-specific insulin infusion protocol and smart pump."
+  },
+];
+
+// ─── Utilities ─────────────────────────────────────────────────────────────────
+function esc(str) {
+  return String(str)
+    .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+}
+
+// ─── Init ──────────────────────────────────────────────────────────────────────
+document.getElementById("drug-count").textContent =
+  drugs.length + " drugs in current database — adult IV preparations only";
+
+// Quick chips (a curated sample)
+const quickDrugs = ["Vancomycin","Cefazolin","Piperacillin-Tazobactam","Norepinephrine",
+  "Potassium Chloride","Insulin Regular","Furosemide","Ondansetron","Amiodarone","Morphine"];
+const chipContainer = document.getElementById("quick-chips");
+quickDrugs.forEach(name => {
+  const d = drugs.find(x => x.name === name);
+  if (!d) return;
+  const el = document.createElement("div");
+  el.className = "drug-chip";
+  el.textContent = name;
+  el.addEventListener("click", () => selectDrug(d));
+  chipContainer.appendChild(el);
+});
+
+// ─── Search ────────────────────────────────────────────────────────────────────
+const searchEl = document.getElementById("search");
+const acEl     = document.getElementById("autocomplete");
+const emptyEl  = document.getElementById("empty-state");
+const cardEl   = document.getElementById("drug-card");
+let acIndex    = -1;
+
+searchEl.addEventListener("input", () => {
+  const q = searchEl.value.trim().toLowerCase();
+  acIndex = -1;
+  if (!q) { acEl.style.display = "none"; return; }
+  const matches = drugs.filter(d =>
+    d.name.toLowerCase().includes(q) ||
+    d.generic.toLowerCase().includes(q) ||
+    (d.aliases || []).some(a => a.toLowerCase().includes(q))
+  );
+  if (!matches.length) { acEl.style.display = "none"; return; }
+  acEl._matches = matches.slice(0, 8);
+  acEl.innerHTML = acEl._matches.map((d,i) =>
+    `<div class="ac-item" data-i="${i}">
+       <span>${esc(d.name)}</span>
+       <span class="ac-cat">${esc(d.class)}</span>
+     </div>`
+  ).join("");
+  acEl.style.display = "block";
+  acEl.querySelectorAll(".ac-item").forEach(el => {
+    el.addEventListener("mousedown", e => { e.preventDefault(); selectDrug(acEl._matches[+el.dataset.i]); });
+  });
+});
+
+searchEl.addEventListener("keydown", e => {
+  const items = acEl.querySelectorAll(".ac-item");
+  if (!items.length) return;
+  if (e.key === "ArrowDown") { e.preventDefault(); acIndex = Math.min(acIndex+1, items.length-1); hilite(items); }
+  else if (e.key === "ArrowUp") { e.preventDefault(); acIndex = Math.max(acIndex-1, 0); hilite(items); }
+  else if (e.key === "Enter") {
+    if (acIndex >= 0) selectDrug(acEl._matches[acIndex]);
+    else if (acEl._matches && acEl._matches.length === 1) selectDrug(acEl._matches[0]);
+  }
+  else if (e.key === "Escape") acEl.style.display = "none";
+});
+
+function hilite(items) {
+  items.forEach((el,i) => el.classList.toggle("focused", i === acIndex));
+  if (acIndex >= 0) items[acIndex].scrollIntoView({ block:"nearest" });
+}
+
+document.addEventListener("click", e => {
+  if (!acEl.contains(e.target) && e.target !== searchEl) acEl.style.display = "none";
+});
+
+// ─── Render ────────────────────────────────────────────────────────────────────
+const badgeMap = {
+  highalert:   `<div class="alert-badge badge-highalert"><span class="badge-icon">⚠</span>High Alert</div>`,
+  light:       `<div class="alert-badge badge-light"><span class="badge-icon">☀</span>Protect from Light</div>`,
+  refrig:      `<div class="alert-badge badge-refrig"><span class="badge-icon">❄</span>Refrigerate</div>`,
+  vesicant:    `<div class="alert-badge badge-vesicant"><span class="badge-icon">💧</span>Vesicant</div>`,
+  d5only:      `<div class="alert-badge badge-d5only"><span class="badge-icon">⚗</span>D5W Only</div>`,
+  donotfreeze: `<div class="alert-badge badge-donotfreeze"><span class="badge-icon">🚫</span>Do Not Freeze</div>`,
+  filter:      `<div class="alert-badge badge-filter"><span class="badge-icon">⬡</span>Filter Required</div>`,
+};
+
+function selectDrug(drug) {
+  acEl.style.display = "none";
+  searchEl.value = drug.name;
+
+  document.getElementById("card-name").textContent    = drug.name;
+  document.getElementById("card-generic").textContent = drug.generic;
+  document.getElementById("card-class").textContent   = drug.class;
+  document.getElementById("card-badges").innerHTML    =
+    (drug.alerts||[]).map(a => badgeMap[a]||"").join("");
+
+  // Diluents
+  document.getElementById("diluent-tbody").innerHTML = drug.diluents.map(d =>
+    `<tr>
+       <td><span class="diluent-pill">${esc(d.sol)}</span></td>
+       <td>${d.bags.map(b=>`<span class="bag-pill">${esc(b)}</span>`).join(" ")}</td>
+       <td style="color:var(--gray-600);font-size:0.78rem">${esc(d.note)}</td>
+     </tr>`
+  ).join("");
+
+  // Concentration
+  document.getElementById("conc-body").innerHTML =
+    `<div class="conc-row"><span class="conc-label">Min</span><span class="conc-value">${esc(drug.concentration.min)}</span></div>
+     <div class="conc-row"><span class="conc-label">Max</span><span class="conc-value">${esc(drug.concentration.max)}</span></div>
+     <div class="conc-note">${esc(drug.concentration.note)}</div>`;
+
+  // Stability
+  document.getElementById("stability-tbody").innerHTML = drug.stability.map(s =>
+    `<tr>
+       <td>${esc(s.condition)}</td>
+       <td style="white-space:nowrap;padding-right:0.5rem">${esc(s.temp)}</td>
+       <td><strong>${esc(s.duration)}</strong></td>
+     </tr>`
+  ).join("");
+
+  // Pearls
+  document.getElementById("pearls-body").innerHTML = drug.pearls.map(p =>
+    `<div class="pearl"><span class="pearl-icon">${p.icon}</span><span>${esc(p.text)}</span></div>`
+  ).join("");
+
+  // Note
+  const nb = document.getElementById("notes-box");
+  nb.innerHTML = drug.note
+    ? `<div class="notes-box">📋 ${esc(drug.note)}</div>`
+    : "";
+
+  // Suggest correction link
+  const subject = encodeURIComponent(`IV Buddy correction: ${drug.name}`);
+  const body    = encodeURIComponent(`Drug name: ${drug.name}\nField with issue:\nCorrection or comment:\n`);
+  document.getElementById("correction-link").href =
+    `mailto:lmbergs@gmail.com?subject=${subject}&body=${body}`;
+
+  emptyEl.style.display = "none";
+  cardEl.style.display  = "block";
+  window.scrollTo({ top: cardEl.offsetTop - 70, behavior: "smooth" });
+}
+
+// ─── Home ──────────────────────────────────────────────────────────────────────
+function goHome() {
+  searchEl.value = "";
+  acEl.style.display = "none";
+  cardEl.style.display = "none";
+  emptyEl.style.display = "block";
+  window.scrollTo({ top: 0, behavior: "smooth" });
+  searchEl.focus();
+}
+
+// ─── Modal ─────────────────────────────────────────────────────────────────────
+function openAbout()  { document.getElementById("about-modal").classList.add("open"); }
+function closeAbout() { document.getElementById("about-modal").classList.remove("open"); }
+document.addEventListener("keydown", e => { if (e.key === "Escape") closeAbout(); });
+</script>
+</body>
+</html>
