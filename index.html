@@ -49,7 +49,8 @@
       top: 0;
       z-index: 50;
     }
-    .logo { font-size: 1.25rem; font-weight: 700; letter-spacing: -0.3px; display: flex; align-items: center; gap: 6px; }
+    .logo { font-size: 1.25rem; font-weight: 700; letter-spacing: -0.3px; display: flex; align-items: center; gap: 6px; cursor: pointer; user-select: none; }
+    .logo:hover { opacity: 0.85; }
     .logo-dot { width: 8px; height: 8px; background: rgba(255,255,255,0.5); border-radius: 50%; }
     .proto-badge {
       font-size: 0.6rem;
@@ -336,7 +337,7 @@
 
 <!-- ── Header ─────────────────────────────────────────────────────────────── -->
 <header>
-  <div class="logo">
+  <div class="logo" onclick="goHome()" title="Back to home">
     IV Buddy
     <div class="logo-dot"></div>
   </div>
@@ -1469,6 +1470,16 @@ function selectDrug(drug) {
   emptyEl.style.display = "none";
   cardEl.style.display  = "block";
   window.scrollTo({ top: cardEl.offsetTop - 70, behavior: "smooth" });
+}
+
+// ─── Home ──────────────────────────────────────────────────────────────────────
+function goHome() {
+  searchEl.value = "";
+  acEl.style.display = "none";
+  cardEl.style.display = "none";
+  emptyEl.style.display = "block";
+  window.scrollTo({ top: 0, behavior: "smooth" });
+  searchEl.focus();
 }
 
 // ─── Modal ─────────────────────────────────────────────────────────────────────
