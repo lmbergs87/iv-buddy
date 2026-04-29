@@ -246,6 +246,18 @@
       border-radius: 4px; padding: 1px 6px; font-size: 0.76rem;
       font-weight: 600; margin: 1px 2px 1px 0;
     }
+    .bag-pair {
+      display: inline-flex; align-items: center; gap: 3px;
+      margin: 1px 4px 1px 0;
+    }
+    .bag-vial {
+      display: inline-block; background: #f0fdf4; color: #15803d;
+      border: 1px solid #86efac;
+      border-radius: 4px; padding: 1px 6px; font-size: 0.76rem; font-weight: 600;
+    }
+    .bag-arrow {
+      font-size: 0.7rem; color: var(--gray-400); font-weight: 700;
+    }
 
     /* ── Concentration ── */
     .conc-row { display: flex; justify-content: space-between; margin-bottom: 0.35rem; font-size: 0.85rem; gap: 0.5rem; }
@@ -530,9 +542,9 @@ const drugs = [
     aliases: ["vanc"],
     alerts: [],
     diluents: [
-      { sol: "NS (0.9% NaCl)",  bags: ["100 mL","250 mL","500 mL"], note: "Preferred" },
-      { sol: "D5W",              bags: ["100 mL","250 mL","500 mL"], note: "Acceptable" },
-      { sol: "LR",               bags: ["250 mL"],                   note: "Limited data; use with caution" },
+      { sol: "NS (0.9% NaCl)",  bags: [{vial:"500 mg",bag:"100 mL"},{vial:"750 mg",bag:"150 mL"},{vial:"1 g",bag:"250 mL"},{vial:"1.5 g",bag:"250 mL"},{vial:"2 g",bag:"500 mL"}], note: "Preferred" },
+      { sol: "D5W",              bags: [{vial:"500 mg",bag:"100 mL"},{vial:"1 g",bag:"250 mL"},{vial:"2 g",bag:"500 mL"}], note: "Acceptable" },
+      { sol: "LR",               bags: [{vial:"1 g",bag:"250 mL"}], note: "Limited data; use with caution" },
     ],
     concentration: { min: "2.5 mg/mL", max: "5 mg/mL (peripheral); up to 10 mg/mL (central only)", note: "Infuse over ≥60 min; ≥90 min for doses ≥1 g to reduce Red Man Syndrome risk." },
     stability: [
@@ -554,8 +566,8 @@ const drugs = [
     aliases: ["pip-tazo","pip tazo","zosyn","pip/tazo"],
     alerts: [],
     diluents: [
-      { sol: "NS (0.9% NaCl)",  bags: ["50 mL","100 mL","150 mL"], note: "Preferred; better stability" },
-      { sol: "D5W",              bags: ["50 mL","100 mL"],           note: "Compatible; shorter stability for extended infusion" },
+      { sol: "NS (0.9% NaCl)",  bags: [{vial:"2.25 g",bag:"50 mL"},{vial:"3.375 g",bag:"50 mL"},{vial:"4.5 g",bag:"100 mL"}], note: "Preferred; better stability" },
+      { sol: "D5W",              bags: [{vial:"2.25 g",bag:"50 mL"},{vial:"3.375 g",bag:"50 mL"},{vial:"4.5 g",bag:"100 mL"}], note: "Compatible; shorter stability for extended infusion" },
     ],
     concentration: { min: "Std: 3.375 g/50 mL or 4.5 g/100 mL", max: "≤200 mg piperacillin/mL for peripheral", note: "Extended infusion (4 hr) used for resistant organisms (MIC 16–64 mg/L) — use NS only." },
     stability: [
@@ -578,8 +590,8 @@ const drugs = [
     aliases: ["merrem"],
     alerts: [],
     diluents: [
-      { sol: "NS (0.9% NaCl)", bags: ["50 mL","100 mL","250 mL"], note: "Preferred — most stable" },
-      { sol: "D5W",             bags: ["50 mL","100 mL"],           note: "Compatible; shorter stability" },
+      { sol: "NS (0.9% NaCl)", bags: [{vial:"500 mg",bag:"100 mL"},{vial:"1 g",bag:"100 mL"}], note: "Preferred — most stable" },
+      { sol: "D5W",             bags: [{vial:"500 mg",bag:"100 mL"},{vial:"1 g",bag:"100 mL"}], note: "Compatible; shorter stability" },
     ],
     concentration: { min: "1 mg/mL", max: "20 mg/mL (infusion); 50 mg/mL (bolus, central preferred)", note: "Extended infusion (3 hr) used for higher MIC organisms — prepare fresh, no premix available." },
     stability: [
@@ -601,9 +613,9 @@ const drugs = [
     aliases: ["ancef","kefzol"],
     alerts: [],
     diluents: [
-      { sol: "NS (0.9% NaCl)",   bags: ["50 mL","100 mL"], note: "Compatible" },
-      { sol: "D5W",               bags: ["50 mL","100 mL"], note: "Compatible" },
-      { sol: "SWFI (IVP only)",   bags: ["Syringe"],         note: "Reconstitution / IVP only" },
+      { sol: "NS (0.9% NaCl)",   bags: [{vial:"1 g",bag:"50 mL"},{vial:"2 g",bag:"100 mL"}], note: "Compatible" },
+      { sol: "D5W",               bags: [{vial:"1 g",bag:"50 mL"},{vial:"2 g",bag:"100 mL"}], note: "Compatible" },
+      { sol: "SWFI (IVP only)",   bags: ["Syringe"], note: "Reconstitution / IVP only" },
     ],
     concentration: { min: "20 mg/mL (infusion)", max: "138 mg/mL (IVP, 3–5 min)", note: "Infusion typically over 15–30 min. Surgical prophylaxis: 2 g (3 g if >120 kg)." },
     stability: [
@@ -626,9 +638,9 @@ const drugs = [
     aliases: ["maxipime"],
     alerts: [],
     diluents: [
-      { sol: "NS (0.9% NaCl)", bags: ["50 mL","100 mL"], note: "Compatible" },
-      { sol: "D5W",             bags: ["50 mL","100 mL"], note: "Compatible" },
-      { sol: "LR",              bags: ["50 mL","100 mL"], note: "Compatible" },
+      { sol: "NS (0.9% NaCl)", bags: [{vial:"1 g",bag:"50 mL"},{vial:"2 g",bag:"100 mL"}], note: "Compatible" },
+      { sol: "D5W",             bags: [{vial:"1 g",bag:"50 mL"},{vial:"2 g",bag:"100 mL"}], note: "Compatible" },
+      { sol: "LR",              bags: [{vial:"1 g",bag:"50 mL"},{vial:"2 g",bag:"100 mL"}], note: "Compatible" },
     ],
     concentration: { min: "10 mg/mL", max: "40 mg/mL", note: "Infuse over 30 min (standard) or 3–4 hrs (extended infusion for resistant organisms). Renal dose adjustment required." },
     stability: [
@@ -649,8 +661,8 @@ const drugs = [
     aliases: ["unasyn","amp-sulbactam"],
     alerts: [],
     diluents: [
-      { sol: "NS (0.9% NaCl)", bags: ["50 mL","100 mL"], note: "Preferred; longest stability" },
-      { sol: "D5W",             bags: ["50 mL","100 mL"], note: "Compatible; significantly shorter stability" },
+      { sol: "NS (0.9% NaCl)", bags: [{vial:"1.5 g",bag:"50 mL"},{vial:"3 g",bag:"100 mL"}], note: "Preferred; longest stability" },
+      { sol: "D5W",             bags: [{vial:"1.5 g",bag:"50 mL"},{vial:"3 g",bag:"100 mL"}], note: "Compatible; significantly shorter stability" },
     ],
     concentration: { min: "3 mg/mL", max: "45 mg/mL (IVP); 30 mg/mL (infusion)", note: "Infuse over 15–30 min. IVP over ≤3 min." },
     stability: [
@@ -1456,7 +1468,10 @@ function selectDrug(drug) {
   document.getElementById("diluent-tbody").innerHTML = drug.diluents.map(d =>
     `<tr>
        <td><span class="diluent-pill">${esc(d.sol)}</span></td>
-       <td>${d.bags.map(b=>`<span class="bag-pill">${esc(b)}</span>`).join(" ")}</td>
+       <td>${d.bags.map(b => typeof b === "object"
+         ? `<span class="bag-pair"><span class="bag-vial">${esc(b.vial)}</span><span class="bag-arrow">→</span><span class="bag-pill">${esc(b.bag)}</span></span>`
+         : `<span class="bag-pill">${esc(b)}</span>`
+       ).join(" ")}</td>
        <td style="color:var(--gray-600);font-size:0.78rem">${esc(d.note)}</td>
      </tr>`
   ).join("");
