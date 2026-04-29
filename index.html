@@ -168,18 +168,42 @@
       padding: 3px 10px; border-radius: 20px;
       font-weight: 500; white-space: nowrap;
     }
-    .alert-badges { display: flex; gap: 0.4rem; flex-wrap: wrap; margin-top: 0.6rem; }
+    .alert-badges { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.75rem; }
     .alert-badge {
-      font-size: 0.68rem; font-weight: 600;
-      padding: 2px 8px; border-radius: 12px;
-      display: flex; align-items: center; gap: 3px;
-      text-transform: uppercase; letter-spacing: 0.3px;
+      font-size: 0.67rem;
+      font-weight: 800;
+      padding: 4px 9px 4px 7px;
+      border-radius: 5px;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: white;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.18), inset 0 1px 0 rgba(255,255,255,0.15);
+      border: none;
+      position: relative;
     }
-    .badge-light    { background: var(--warn-bg);    color: #92400e; border: 1px solid var(--warn-border); }
-    .badge-refrig   { background: #e0f2fe;            color: #075985; border: 1px solid #7dd3fc; }
-    .badge-vesicant { background: var(--danger-bg);   color: #991b1b; border: 1px solid var(--danger-border); }
-    .badge-highalert{ background: #fdf4ff;             color: #6b21a8; border: 1px solid #d8b4fe; }
-    .badge-d5only   { background: #fef9c3;             color: #713f12; border: 1px solid #fde047; }
+    /* Left accent stripe — mimics the colored edge on real aux labels */
+    .alert-badge::before {
+      content: '';
+      display: block;
+      width: 3px;
+      height: 100%;
+      position: absolute;
+      left: 0; top: 0;
+      border-radius: 5px 0 0 5px;
+      background: rgba(0,0,0,0.2);
+    }
+    .badge-icon { font-size: 0.8rem; line-height: 1; }
+
+    .badge-highalert { background: linear-gradient(135deg, #dc2626, #b91c1c); }
+    .badge-light     { background: linear-gradient(135deg, #d97706, #b45309); }
+    .badge-refrig    { background: linear-gradient(135deg, #2563eb, #1d4ed8); }
+    .badge-vesicant  { background: linear-gradient(135deg, #c2410c, #9a3412); }
+    .badge-d5only    { background: linear-gradient(135deg, #15803d, #166534); }
+    .badge-donotfreeze { background: linear-gradient(135deg, #0891b2, #0e7490); }
+    .badge-filter    { background: linear-gradient(135deg, #7c3aed, #6d28d9); }
 
     /* ── Sections grid ── */
     .sections-grid {
@@ -712,7 +736,7 @@ const drugs = [
     generic: "Acyclovir Sodium",
     class: "Antiviral",
     aliases: ["zovirax"],
-    alerts: [],
+    alerts: ["donotfreeze"],
     diluents: [
       { sol: "NS (0.9% NaCl)", bags: ["100 mL","250 mL"], note: "Preferred; dilute to ≤7 mg/mL" },
       { sol: "D5W",             bags: ["100 mL","250 mL"], note: "Compatible" },
@@ -760,7 +784,7 @@ const drugs = [
     generic: "Amiodarone HCl (Nexterone®)",
     class: "Antiarrhythmic (Class III)",
     aliases: ["nexterone","cordarone iv"],
-    alerts: ["light","vesicant","d5only"],
+    alerts: ["highalert","light","vesicant","d5only","filter"],
     diluents: [
       { sol: "D5W ONLY",   bags: ["100 mL","250 mL","500 mL"], note: "⚠️ Use D5W exclusively — NS may cause precipitation" },
     ],
@@ -1096,7 +1120,7 @@ const drugs = [
     generic: "Lorazepam (Ativan®)",
     class: "Benzodiazepine Sedative / Anticonvulsant",
     aliases: ["ativan"],
-    alerts: ["highalert","light"],
+    alerts: ["highalert","light","refrig"],
     diluents: [
       { sol: "NS (0.9% NaCl)", bags: ["50 mL","100 mL"], note: "Preferred for infusion; dilute 1:1 minimum" },
       { sol: "D5W",             bags: ["50 mL","100 mL"], note: "Compatible" },
@@ -1409,11 +1433,13 @@ document.addEventListener("click", e => {
 
 // ─── Render ────────────────────────────────────────────────────────────────────
 const badgeMap = {
-  light:    `<div class="alert-badge badge-light">☀️ Protect from Light</div>`,
-  refrig:   `<div class="alert-badge badge-refrig">❄️ Refrigerate</div>`,
-  vesicant: `<div class="alert-badge badge-vesicant">⚠️ Vesicant</div>`,
-  highalert:`<div class="alert-badge badge-highalert">☢️ High-Alert Med</div>`,
-  d5only:   `<div class="alert-badge badge-d5only">⚗️ D5W Only</div>`,
+  highalert:   `<div class="alert-badge badge-highalert"><span class="badge-icon">⚠</span>High Alert</div>`,
+  light:       `<div class="alert-badge badge-light"><span class="badge-icon">☀</span>Protect from Light</div>`,
+  refrig:      `<div class="alert-badge badge-refrig"><span class="badge-icon">❄</span>Refrigerate</div>`,
+  vesicant:    `<div class="alert-badge badge-vesicant"><span class="badge-icon">💧</span>Vesicant</div>`,
+  d5only:      `<div class="alert-badge badge-d5only"><span class="badge-icon">⚗</span>D5W Only</div>`,
+  donotfreeze: `<div class="alert-badge badge-donotfreeze"><span class="badge-icon">🚫</span>Do Not Freeze</div>`,
+  filter:      `<div class="alert-badge badge-filter"><span class="badge-icon">⬡</span>Filter Required</div>`,
 };
 
 function selectDrug(drug) {
